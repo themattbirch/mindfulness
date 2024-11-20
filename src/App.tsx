@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState } from 'react'
 import Timer from './components/Timer'
 import Quote from './components/Quote'
