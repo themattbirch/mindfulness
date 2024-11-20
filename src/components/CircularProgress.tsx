@@ -1,32 +1,34 @@
+// Remove unused React import
+// import React from 'react'
+
 interface CircularProgressProps {
-  progress: number;
+  progress: number
 }
 
 export function CircularProgress({ progress }: CircularProgressProps) {
-  const circumference = 2 * Math.PI * 90; // radius = 90
+  const radius = 45
+  const circumference = 2 * Math.PI * radius
+  const strokeDashoffset = circumference * (1 - progress)
 
   return (
-    <svg className="w-48 h-48 transform -rotate-90">
+    <svg className="w-32 h-32 transform -rotate-90">
       <circle
-        className="text-gray-200"
+        className="stroke-gray-200"
         strokeWidth="4"
-        stroke="currentColor"
         fill="transparent"
-        r="90"
-        cx="96"
-        cy="96"
+        r={radius}
+        cx="64"
+        cy="64"
       />
       <circle
-        className="text-blue-600 transition-all duration-300 ease-in-out"
+        className="stroke-primary transition-all duration-300 ease-in-out"
         strokeWidth="4"
-        strokeDasharray={circumference}
-        strokeDashoffset={circumference * ((100 - progress) / 100)}
-        strokeLinecap="round"
-        stroke="currentColor"
         fill="transparent"
-        r="90"
-        cx="96"
-        cy="96"
+        r={radius}
+        cx="64"
+        cy="64"
+        strokeDasharray={circumference}
+        strokeDashoffset={strokeDashoffset}
       />
     </svg>
   )

@@ -1,3 +1,6 @@
+import { storage } from './storage'
+import { Statistics } from '../types'
+
 export interface Achievement {
   id: string;
   name: string;
@@ -29,11 +32,23 @@ export const achievements: Achievement[] = [
     icon: '⏰',
     condition: (stats) => stats.totalMinutes >= 60
   },
-  // Add more achievements...
+  {
+    id: 'zen-master',
+    name: 'Zen Master',
+    description: 'Complete 30 sessions',
+    icon: '🧘',
+    condition: (stats) => stats.sessionsCompleted >= 30
+  },
+  {
+    id: 'early-bird',
+    name: 'Early Bird',
+    description: 'Complete a session before 8 AM',
+    icon: '🌅',
+    condition: (stats) => stats.hasEarlyMorningSession
+  }
 ]
 
-export async function checkAchievements(): Promise<Achievement[]> {
-  const stats = await storage.getStatistics()
+export async function checkAchievements(stats: Statistics): Promise<Achievement[]> {
   const unlockedAchievements = await storage.getUnlockedAchievements()
   
   const newAchievements = achievements.filter(achievement => 
@@ -42,10 +57,11 @@ export async function checkAchievements(): Promise<Achievement[]> {
   )
 
   if (newAchievements.length > 0) {
-    await storage.saveUnlockedAchievements([
+    const updatedAchievements = [
       ...unlockedAchievements,
       ...newAchievements.map(a => a.id)
-    ])
+    ]
+    await storage.saveUnlockedAchievements(updatedAchievements)
   }
 
   return newAchievements

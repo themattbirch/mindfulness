@@ -1,49 +1,23 @@
-import { useState, useEffect } from 'react'
-import { storage } from '../services/storage'
-import type { Statistics } from '../services/storage'
+interface StatisticsProps {
+  totalSessions: number
+  totalMinutes: number
+  averageSessionLength: number
+}
 
-export default function Statistics() {
-  const [stats, setStats] = useState<Statistics | null>(null)
-
-  useEffect(() => {
-    storage.getStatistics().then(setStats)
-  }, [])
-
-  if (!stats) return null
-
+export function Statistics({ totalSessions, totalMinutes, averageSessionLength }: StatisticsProps) {
   return (
-    <div className="grid grid-cols-2 gap-4 p-4 bg-white dark:bg-gray-700 rounded-lg">
+    <div className="grid grid-cols-3 gap-4 p-4">
       <div className="text-center">
-        <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-          {stats.totalMinutes}
-        </p>
-        <p className="text-sm text-gray-600 dark:text-gray-300">
-          Total Minutes
-        </p>
+        <h3 className="text-lg font-semibold">Total Sessions</h3>
+        <p className="text-2xl">{totalSessions}</p>
       </div>
       <div className="text-center">
-        <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-          {stats.sessionsCompleted}
-        </p>
-        <p className="text-sm text-gray-600 dark:text-gray-300">
-          Sessions
-        </p>
+        <h3 className="text-lg font-semibold">Total Minutes</h3>
+        <p className="text-2xl">{totalMinutes}</p>
       </div>
       <div className="text-center">
-        <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-          {stats.currentStreak}
-        </p>
-        <p className="text-sm text-gray-600 dark:text-gray-300">
-          Current Streak
-        </p>
-      </div>
-      <div className="text-center">
-        <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-          {stats.longestStreak}
-        </p>
-        <p className="text-sm text-gray-600 dark:text-gray-300">
-          Longest Streak
-        </p>
+        <h3 className="text-lg font-semibold">Average Length</h3>
+        <p className="text-2xl">{Math.round(averageSessionLength)}m</p>
       </div>
     </div>
   )

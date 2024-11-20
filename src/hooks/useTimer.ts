@@ -1,46 +1,82 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useToast } from '../components/ui/toast'
 import { storage } from '../services/storage'
+import { sounds } from '../services/sounds'
+import { useKeyboardShortcuts } from './useKeyboardShortcuts'
+
+interface TimerState {
+  time: number
+  isRunning: boolean
+  initialDuration: number
+}
 
 export function useTimer() {
-  const [time, setTime] = useState(0)
-  const [isRunning, setIsRunning] = useState(false)
+  const [state, setState] = useState<TimerState>({
+    time: 0,
+    isRunning: false,
+    initialDuration: 900 // 15 minutes default
+  })
+  
   const { toast } = useToast()
 
-  // Load timer state
-  useEffect(() => {
-    storage.getTimer().then(({ time, isRunning }) => {
-      setTime(time)
-      setIsRunning(isRunning)
-    })
+  const start = useCallback(() => {
+    setState(prev => ({ ...prev, isRunning: true }))
+    sounds.play('tick')
   }, [])
 
-  // Save timer state
-  useEffect(() => {
-    storage.saveTimer({ time, isRunning })
-    chrome.runtime.sendMessage({
-      type: 'UPDATE_TIMER',
-      timer: { time, isRunning }
-    })
-  }, [time, isRunning])
-
-  const showNotification = useCallback(() => {
-    chrome.alarms.create('mindfulness-reminder', {
-      delayInMinutes: 15
-    })
+  const pause = useCallback(() => {
+    setState(prev => ({ ...prev, isRunning: false }))
   }, [])
 
+  const reset = useCallback(() => {
+    setState(prev => ({
+      ...prev,
+      time: prev.initialDuration,
+      isRunning: false
+    }))
+  }, [])
+
+  const setDuration = useCallback((duration: number) => {
+    setState(prev => ({
+      ...prev,
+      time: duration,
+      initialDuration: duration,
+      isRunning: false
+    }))
+  }, [])
+
+  // Handle keyboard shortcuts
+  useKeyboardShortcuts({
+    onStart: () => state.isRunning ? pause() : start(),
+    onReset: reset,
+    onSpace: () => state.isRunning ? pause() : start()
+  })
+
+  // Timer tick effect
   useEffect(() => {
     let interval: number | null = null
 
-    if (isRunning) {
+    if (state.isRunning && state.time > 0) {
       interval = window.setInterval(() => {
-        setTime(prev => {
-          const next = prev + 1
-          if (next % 900 === 0) { // 15 minutes
-            showNotification()
+        setState(prev => {
+          const newTime = prev.time - 1
+          
+          if (newTime === 0) {
+            sounds.play('complete')
+            toast({
+              title: 'Timer Complete',
+              message: 'Time to take a mindful break',
+              type: 'success',
+              duration: 10000
+            })
+            return { ...prev, isRunning: false, time: 0 }
           }
-          return next
+
+          if (newTime % 60 === 0) {
+            sounds.play('tick')
+          }
+
+          return { ...prev, time: newTime }
         })
       }, 1000)
     }
@@ -48,23 +84,18 @@ export function useTimer() {
     return () => {
       if (interval) clearInterval(interval)
     }
-  }, [isRunning, showNotification])
+  }, [state.isRunning, state.time, toast])
 
-  const start = () => setIsRunning(true)
-  const pause = () => setIsRunning(false)
-  const reset = () => {
-    setTime(0)
-    setIsRunning(false)
-  }
-
-  const progress = (time % 900) / 900 * 100
+  // Calculate progress percentage
+  const progress = (state.time / state.initialDuration) * 100
 
   return {
-    time,
-    isRunning,
+    time: state.time,
+    isRunning: state.isRunning,
     progress,
     start,
     pause,
-    reset
+    reset,
+    setDuration
   }
 } 

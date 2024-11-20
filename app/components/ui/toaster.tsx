@@ -1,18 +1,20 @@
 import React from 'react';
 import { useToast } from './use-toast';
 
-export const Toaster: React.FC = () => {
+export function Toaster() {
   const { toasts } = useToast();
 
   return (
-    <div className="fixed bottom-0 right-0 p-4 space-y-2">
-      {toasts.map((toast, index) => (
-        <div key={index} className="bg-gray-800 text-white p-3 rounded">
-          <strong>{toast.title}</strong>
-          <p>{toast.description}</p>
-          {toast.action}
+    <div className="fixed top-0 right-0 p-4 space-y-4 z-50">
+      {toasts.map(({ id, title, description }) => (
+        <div
+          key={id}
+          className="bg-white rounded-lg shadow-lg p-4 max-w-sm"
+        >
+          {title && <div className="font-semibold">{title}</div>}
+          {description && <div className="text-sm text-gray-500">{description}</div>}
         </div>
       ))}
     </div>
   );
-}; 
+} 
